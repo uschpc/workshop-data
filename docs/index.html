@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Derek Strong   dstrong[at]usc.edu   Research Computing Associate   CARC at USC  " />
+  <meta name="date" content="2021-04-02" />
+  <title>Data Management on CARC Systems</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+   href="main.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Data Management on CARC Systems</h1>
+  <p class="author">
+Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC at USC <br>
+  </p>
+  <p class="date"><code>2021-04-02</code></p>
+</div>
+<div id="outline" class="slide section level2">
+<h1>Outline</h1>
+<ul>
+<li>Storage file systems</li>
+<li>Managing files</li>
+<li>Transferring files</li>
+</ul>
+</div>
+<div id="storage-file-systems" class="slide section level2">
+<h1>Storage file systems</h1>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File system</th>
+<th>Recommended storage</th>
+<th>Recommended activities</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>/home1</td>
+<td>personal files, configuration files</td>
+<td>creating and editing scripts/programs</td>
+</tr>
+<tr class="even">
+<td>/project</td>
+<td>shared files, software installations, job scripts and files, I/O files</td>
+<td>creating and editing scripts/programs, compiling, I/O, transferring data</td>
+</tr>
+<tr class="odd">
+<td>/scratch &amp; /scratch2</td>
+<td>temporary and I/O files</td>
+<td>I/O, testing</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<ul>
+<li>Mounted on both the Discovery and Endeavour clusters</li>
+<li>Run BeeGFS/ZFS, and files are automatically compressed (on the fly)</li>
+</ul>
+</div>
+<div id="myquota" class="slide section level2">
+<h1>myquota</h1>
+<pre><code>ttrojan@discovery1:~$ myquota
+--------------------------
+/home1/ttrojan
+      user/group     ||           size          ||    chunk files    
+     name     |  id  ||    used    |    hard    ||  used   |  hard   
+--------------|------||------------|------------||---------|---------
+       ttrojan|555555||  127.23 MiB|  100.00 GiB||     4530|  2000000
+
+--------------------------
+/scratch/ttrojan
+      user/group     ||           size          ||    chunk files    
+     name     |  id  ||    used    |    hard    ||  used   |  hard   
+--------------|------||------------|------------||---------|---------
+       ttrojan|555555||  446.78 MiB|   10.00 TiB||     5797|unlimited
+
+--------------------------
+/scratch2/ttrojan
+      user/group     ||           size          ||    chunk files    
+     name     |  id  ||    used    |    hard    ||  used   |  hard   
+--------------|------||------------|------------||---------|---------
+       ttrojan|555555||  200.34 MiB|   30.00 TiB||     4002|unlimited
+
+--------------------------
+/project/ttrojan_123
+      user/group     ||           size          ||    chunk files
+     name     |  id  ||    used    |    hard    ||  used   |  hard
+--------------|------||------------|------------||---------|---------
+   ttrojan_123| 55555||   16.92 GiB|    5.00 TiB||     1134| 30000000</code></pre>
+</div>
+<div id="home-file-system" class="slide section level2">
+<h1>Home file system</h1>
+<ul>
+<li><code>/home1/&lt;username&gt;</code></li>
+<li>Personal directories
+<ul>
+<li>Default directory when logging in</li>
+<li>Personal and configuration files</li>
+</ul></li>
+<li>Quota: 100 GB / 2 M files</li>
+<li>File recovery with daily snapshots and a two-week window</li>
+<li>Use <code>cd</code> to quickly change to your home directory</li>
+</ul>
+</div>
+<div id="project-file-system" class="slide section level2">
+<h1>Project file system</h1>
+<ul>
+<li><code>/project/&lt;PI_username&gt;_&lt;id&gt;</code></li>
+<li>High-performance, parallel I/O file system</li>
+<li>Group directories
+<ul>
+<li>Project files</li>
+<li>Share data, software, and other files among group members</li>
+</ul></li>
+<li>Quota: Variable TB / 30 M files
+<ul>
+<li>5 TB default</li>
+<li>10 TB free per PI across projects</li>
+<li>After that, $40/TB/year</li>
+</ul></li>
+<li>File recovery with daily snapshots and a two-week window</li>
+</ul>
+</div>
+<div id="project-file-system-continued" class="slide section level2">
+<h1>Project file system (continued)</h1>
+<ul>
+<li>Create alias to quickly change to project directories
+<ul>
+<li><code>alias cdp=“cd /project/ttrojan_123”</code></li>
+<li>Add to <code>~/.bashrc</code> to automatically set when logging in</li>
+</ul></li>
+<li>By default, all files have read/write permissions for owner and group members
+<ul>
+<li>If needed, permissions can be changed to restrict access</li>
+<li>Use <code>chmod</code> or <code>setfacl</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="scratch-file-systems" class="slide section level2">
+<h1>Scratch file systems</h1>
+<ul>
+<li><code>/scratch/&lt;username&gt;</code></li>
+<li><code>/scratch2/&lt;username&gt;</code></li>
+<li>High-performance, parallel I/O file system</li>
+<li>Quota: 10 TB for /scratch and 30 TB for /scratch2</li>
+<li>No file recovery</li>
+<li>Use <code>cds</code> and <code>cds2</code> commands to quickly change to those directories</li>
+</ul>
+</div>
+<div id="using-tmp-space" class="slide section level2">
+<h1>Using /tmp space</h1>
+<ul>
+<li>Local <code>/tmp</code> directories on compute nodes are restricted to 1 GB of RAM space, shared among jobs running on the same node</li>
+<li>These can become full and are cleared</li>
+<li>Define temporary directories in your /scratch or /project directories</li>
+<li>Redirect temporary files created in the background by programs</li>
+<li>Set the <code>TMPDIR</code> environment variable:</li>
+</ul>
+<pre><code>mkdir /scratch/&lt;username&gt;/tmp
+export TMPDIR=/scratch/&lt;username&gt;/tmp</code></pre>
+<ul>
+<li>Add the export line to your <code>~/.bashrc</code> to automatically set this variable when logging in</li>
+</ul>
+</div>
+<div id="managing-files-using-the-command-line" class="slide section level2">
+<h1>Managing files using the command line</h1>
+<ul>
+<li>Organizing files</li>
+<li>Sharing files</li>
+<li>Archiving and compressing files</li>
+<li>Project data management plans</li>
+<li>Could also use GUI SFTP clients (more later)</li>
+</ul>
+</div>
+<div id="organizing-files" class="slide section level2">
+<h1>Organizing files</h1>
+<ul>
+<li><code>ls</code> to list files</li>
+<li><code>mkdir</code> to make new diretories</li>
+<li><code>mv</code> to move or rename files</li>
+<li><code>cp</code> to copy files</li>
+<li><code>rm</code> to delete files</li>
+</ul>
+</div>
+<div id="checking-file-disk-usage" class="slide section level2">
+<h1>Checking file disk usage</h1>
+<ul>
+<li>Use <code>du</code> to check disk usage</li>
+<li>To list the ten largest files or subdirectories in the current directory:</li>
+</ul>
+<pre><code>du -s * | sort -nr | head -n 10</code></pre>
+<ul>
+<li>Remember ZFS compresses files, so for uncompressed file sizes:
+<ul>
+<li>Use <code>ls -lh</code> to list files and view file sizes in current directory</li>
+<li>Alternatively, use <code>du -sh --apparent-size *</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="sharing-files" class="slide section level2">
+<h1>Sharing files</h1>
+<ul>
+<li>Project directories are meant for sharing files</li>
+<li>Use <code>chmod</code>, <code>chgrp</code>, or <code>setfacl</code> commands to set file permissions</li>
+<li>For example, to provide read-only access to a subdirectory:</li>
+</ul>
+<pre><code>chmod 750 /project/ttrojan_123/dir</code></pre>
+<ul>
+<li>For fine-grained access control, use <code>setfacl</code></li>
+<li>To check permissions, use <code>ls -l</code> or <code>getfacl</code></li>
+</ul>
+</div>
+<div id="archiving-files" class="slide section level2">
+<h1>Archiving files</h1>
+<ul>
+<li>Use <code>tar</code> to create an archive file from a set of files or directories:</li>
+</ul>
+<pre><code>tar -cvf project.tar &lt;dir&gt;</code></pre>
+<ul>
+<li>Add the <code>--remove-files</code> option to also delete the files</li>
+<li>To list contents of an archive file, use the <code>-t</code> option</li>
+</ul>
+<pre><code>tar -tvf project.tar</code></pre>
+<ul>
+<li>To extract an archive file, use the <code>-x</code> option:</li>
+</ul>
+<pre><code>tar -xvf project.tar</code></pre>
+</div>
+<div id="compressing-files" class="slide section level2">
+<h1>Compressing files</h1>
+<ul>
+<li>Compression/uncompression tools
+<ul>
+<li><code>gzip</code> or <code>pigz</code> or <code>xz</code></li>
+</ul></li>
+<li>For large data, can be useful to compress before transferring files (more later)</li>
+<li>To compress with <code>xz</code> using multiple cores:</li>
+</ul>
+<pre><code>xz -v -T4 dataset.csv</code></pre>
+<ul>
+<li>To uncompress with <code>xz</code> using multiple cores:</li>
+</ul>
+<pre><code>xz -dv -T4 dataset.csv.xz</code></pre>
+</div>
+<div id="archiving-and-compressing-files" class="slide section level2">
+<h1>Archiving and compressing files</h1>
+<ul>
+<li>Can also archive and compress directly with <code>tar</code></li>
+<li>To archive and compress (using <code>gzip</code>):</li>
+</ul>
+<pre><code>tar -czvf project.tar.gz &lt;dir&gt;</code></pre>
+<ul>
+<li>To uncompress and extract:</li>
+</ul>
+<pre><code>tar -xvf project.tar.gz</code></pre>
+</div>
+<div id="long-term-archival-storage" class="slide section level2">
+<h1>Long-term archival storage</h1>
+<ul>
+<li><a href="https://repository.usc.edu/">USC Digital Repository</a></li>
+<li><a href="https://aws.amazon.com/glacier/">AWS Glacier</a></li>
+<li>Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, and Dryad)</li>
+</ul>
+</div>
+<div id="transferring-files" class="slide section level2">
+<h1>Transferring files</h1>
+<ul>
+<li>Data transfer nodes</li>
+<li>Many secure file transfer tools</li>
+<li>Choice depends on preference and type of transfer</li>
+<li>Local ⇄ CARC systems
+<ul>
+<li>GUI: Cyberduck, FileZilla, WinSCP, MobaXterm, Globus</li>
+<li>CLI: <code>sftp</code>, <code>scp</code>, <code>rsync</code>, <code>globus-cli</code></li>
+</ul></li>
+<li>CARC systems ⇄ Internet
+<ul>
+<li>CLI: <code>sftp</code>, <code>lftp</code>, <code>rclone</code>, <code>wget</code>, <code>curl</code>, <code>aria2c</code>, <code>git</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="data-transfer-nodes" class="slide section level2">
+<h1>Data transfer nodes</h1>
+<ul>
+<li>Two dedicated, high-speed data transfer nodes</li>
+<li>hpc-transfer1.usc.edu</li>
+<li>hpc-transfer2.usc.edu</li>
+<li>100 Gbps connectivity</li>
+<li>Note: Compute nodes do not have internet access</li>
+</ul>
+</div>
+<div id="use-cases" class="slide section level2">
+<h1>Use cases</h1>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>System 1</th>
+<th>System 2</th>
+<th>Example Scenarios</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Personal computer</td>
+<td>CARC file system for small-medium transfers</td>
+<td>When transferring files from a personal computer to your CARC project folder that takes a moderate amount of time</td>
+<td>GUI, CLI</td>
+</tr>
+<tr class="even">
+<td>Personal computer</td>
+<td>CARC file system for large or secure transfers</td>
+<td>When transferring files from a personal computer to your CARC project directory that takes a large amount of time or needs to be encrypted</td>
+<td>Globus</td>
+</tr>
+<tr class="odd">
+<td>Amazon Web Services (AWS)</td>
+<td>Any CARC file system</td>
+<td>When transferring files from an AWS server to your CARC project directory</td>
+<td>CLI</td>
+</tr>
+<tr class="even">
+<td>Other HPC center</td>
+<td>Any CARC file system</td>
+<td>When transferring files from another university or research institution to your CARC project directory</td>
+<td>Globus</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="general-recommendations" class="slide section level2">
+<h1>General recommendations</h1>
+<ul>
+<li>Only transfer data that is necessary</li>
+<li>Compress large files using <code>xz</code> to reduce size of transfer (depending on network speed)</li>
+<li>Archive files using <code>tar</code> when transferring large numbers of files</li>
+<li>For large transfers to/from your local computer or other endpoint, use Globus</li>
+</ul>
+</div>
+<div id="graphical-transfer-tools" class="slide section level2">
+<h1>Graphical transfer tools</h1>
+<ul>
+<li>Drag and drop to transfer between local computer and CARC systems</li>
+<li>A few options for SFTP GUI clients:
+<ul>
+<li>Cyberduck</li>
+<li>FileZilla</li>
+<li>WinSCP</li>
+<li>MobaXterm</li>
+</ul></li>
+<li>Can also use Globus web GUI</li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-gui">CARC User Guide for Transferring Files using a GUI</a></li>
+</ul>
+</div>
+<div id="command-line-transfer-tools" class="slide section level2">
+<h1>Command-line transfer tools</h1>
+<ul>
+<li>Many options depending on type of transfer</li>
+</ul>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Local ⇄ CARC systems</td>
+<td><code>sftp</code>, <code>scp</code>, <code>rsync</code>, <code>globus-cli</code></td>
+</tr>
+<tr class="even">
+<td>CARC systems ⇄ Internet</td>
+<td><em>File servers</em>: <code>sftp</code>, <code>lftp</code> <br> <em>Downloads</em>: <code>wget</code>, <code>curl</code>, <code>aria2c</code> <br> <em>Cloud storage</em>: <code>rclone</code> <br> <em>Code</em>: <code>git</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>For small-to-medium transfers to/from your local computer, use <code>sftp</code> or <code>rsync</code></li>
+<li>For large transfers to/from your local computer or other endpoint, use <code>globus-cli</code></li>
+<li>For backing up and syncing directories, use <code>rsync</code></li>
+<li>For transfers to/from an FTP server, use <code>lftp</code></li>
+<li>For faster internet downloads, use <code>aria2c</code></li>
+<li>For transfers to/from cloud storage, use <code>rclone</code></li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-command-line">CARC User Guide for Transferring Files using a CLI</a></li>
+</ul>
+</div>
+<div id="sftp-example" class="slide section level2">
+<h1>sftp example</h1>
+<pre><code>$ sftp ttrojan@hpc-transfer1.usc.edu
+Duo two-factor login for ttrojan
+
+Enter a passcode or select one of the following options:
+
+ 1. Duo Push to XXX-XXX-5555
+ 2. Phone call to XXX-XXX-5555
+ 3. SMS passcodes to XXX-XXX-5555
+
+Passcode or option (1-3): 1
+Connected to hpc-transfer1.usc.edu.
+sftp&gt; lpwd
+Local working directory: /home/tommy
+sftp&gt; lcd myimages
+sftp&gt; lls
+myplot1.jpg myplot2.jpg
+sftp&gt; pwd
+Remote working directory: /home1/ttrojan
+sftp&gt; cd /scratch/ttrojan/images
+sftp&gt; put myplot1.jpg myplot.jpg
+Uploading myplot1.jpg to /scratch/ttrojan/myplot.jpg
+myplot1.jpg                                 100%   10KB   2.4MB/s   00:01    
+sftp&gt; get myplot3.jpg myplot3.jpg
+Fetching /scratch/ttrojan/myplot3.jpg to myplot3.jpg
+/scratch/ttrojan/myplot3.jpg                100%   10KB   2.4MB/s   00:01  </code></pre>
+</div>
+<div id="aria2c-example" class="slide section level2">
+<h1>aria2c example</h1>
+<ul>
+<li><code>aria2c</code> allows multi-connection and concurrent downloads</li>
+<li>To download with multiple connections:</li>
+</ul>
+<pre><code>aria2c -x4 &lt;url&gt;</code></pre>
+<ul>
+<li>To download multiple files concurrently:</li>
+</ul>
+<pre><code>aria2c -j4 -i urls.txt</code></pre>
+</div>
+<div id="rclone" class="slide section level2">
+<h1>rclone</h1>
+<ul>
+<li><code>module load rclone</code></li>
+<li>Similar to <code>rsync</code>, but for transferring files to/from cloud storage services</li>
+<li>Requires configuration</li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-rclone">CARC User Guide for Rclone</a></li>
+</ul>
+</div>
+<div id="globus-service" class="slide section level2">
+<h1>Globus service</h1>
+<ul>
+<li>For large, long-running transfers</li>
+<li>Ability to pause and restart transfers and sync directories</li>
+<li>Can be used to share data between external collaborators or data providers</li>
+<li>Web GUI or CLI</li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-globus">CARC User Guide for Globus</a></li>
+</ul>
+</div>
+<div id="backing-up-files" class="slide section level2">
+<h1>Backing up files</h1>
+<ul>
+<li>Local storage (e.g., external drive)
+<ul>
+<li>Use <code>rsync</code> or Globus</li>
+</ul></li>
+<li>Cloud storage
+<ul>
+<li>Use <code>rclone</code></li>
+</ul></li>
+<li>Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, and Dryad)</li>
+<li>Create aliases or shell scripts to help automate backups</li>
+</ul>
+</div>
+<div id="additional-resources" class="slide section level2">
+<h1>Additional resources</h1>
+<ul>
+<li><a href="https://carc.usc.edu/user-information/user-guides/data-management">CARC User Guides for Data Management</a></li>
+<li><a href="https://carc.usc.edu/user-information/ticket-submission">Submit a support ticket</a></li>
+</ul>
+</div>
+</body>
+</html>
