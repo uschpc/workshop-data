@@ -1,29 +1,36 @@
 ---
 title: Data Management on CARC Systems
-author: Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC at USC <br>
-date: <code>2021-04-02</code>
+author: Center for Advanced Research Computing <br> University of Southern California
+date: 2021-06-03
 ---
 
 
 ## Outline
 
-- Storage file systems
-- Managing files
-- Transferring files
+1 - Storage file systems  
+2 - Managing files  
+3 - Transferring files
 
 
-## Storage file systems
+## 1 - Storage file systems
+
+[CARC User Guide for Storage File Systems](https://carc.usc.edu/user-information/user-guides/data-management/storage-file-systems)
+
+
+## Overview of file systems
 
 | File system | Recommended storage | Recommended activities |
 |---|---|---|
-| /home1 | personal files, configuration files | creating and editing scripts/programs |
-| /project | shared files, software installations, job scripts and files, I/O files | creating and editing scripts/programs, compiling, I/O, transferring data |
+| /home1 | personal files, configuration files, software | creating scripts/programs, installing software |
+| /project | shared files, software, job scripts, I/O files | creating scripts/programs, installing software, I/O, transferring data |
 | /scratch & /scratch2 | temporary and I/O files | I/O, testing |
 
 <br>
 
 - Mounted on both the Discovery and Endeavour clusters
 - Run BeeGFS/ZFS, and files are automatically compressed (on the fly)
+- Do not support sensitive data (HIPAA, FERPA, etc.)
+- Check your directories and usage with `myquota`
 
 
 ## myquota
@@ -49,7 +56,7 @@ ttrojan@discovery1:~$ myquota
       user/group     ||           size          ||    chunk files    
      name     |  id  ||    used    |    hard    ||  used   |  hard   
 --------------|------||------------|------------||---------|---------
-       ttrojan|555555||  200.34 MiB|   30.00 TiB||     4002|unlimited
+       ttrojan|555555||  200.34 MiB|   10.00 TiB||     4002|unlimited
 
 --------------------------
 /project/ttrojan_123
@@ -66,6 +73,7 @@ ttrojan@discovery1:~$ myquota
 - Personal directories
   - Default directory when logging in
   - Personal and configuration files
+  - Software
 - Quota: 100 GB / 2 M files
 - File recovery with daily snapshots and a two-week window
 - Use `cd` to quickly change to your home directory
@@ -92,15 +100,15 @@ ttrojan@discovery1:~$ myquota
   - Add to `~/.bashrc` to automatically set when logging in
 - By default, all files have read/write permissions for owner and group members
   - If needed, permissions can be changed to restrict access
-  - Use `chmod` or `setfacl`
+  - Use `chmod`
 
 
 ## Scratch file systems
 
 - `/scratch/<username>`
 - `/scratch2/<username>`
-- High-performance, parallel I/O file system
-- Quota: 10 TB for /scratch and 30 TB for /scratch2
+- High-performance, parallel I/O file systems
+- Quota: 10 TB each
 - No file recovery
 - Use `cds` and `cds2` commands to quickly change to those directories
 
@@ -108,7 +116,7 @@ ttrojan@discovery1:~$ myquota
 ## Using /tmp space
 
 - Local `/tmp` directories on compute nodes are restricted to 1 GB of RAM space, shared among jobs running on the same node
-- These can become full and are cleared
+- These can become full and are cleared (which can kill jobs)
 - Define temporary directories in your /scratch or /project directories
 - Redirect temporary files created in the background by programs
 - Set the `TMPDIR` environment variable:
@@ -121,13 +129,27 @@ export TMPDIR=/scratch/<username>/tmp
 - Add the export line to your `~/.bashrc` to automatically set this variable when logging in
 
 
-## Managing files using the command line
+## Exercise 1
+
+Create an alias command for changing to your project directory
+
+
+## 2 - Managing files
+
+[CARC User Guide for Managing Files](https://carc.usc.edu/user-information/user-guides/data-management/managing-files)
+
+
+## Some example management tasks
 
 - Organizing files
 - Sharing files
 - Archiving and compressing files
-- Project data management plans
-- Could also use GUI SFTP clients (more later)
+
+
+## A note on data management plans
+
+- Have a project data management plan
+- Review the literature for best practices in your discipline
 
 
 ## Organizing files
@@ -137,6 +159,12 @@ export TMPDIR=/scratch/<username>/tmp
 - `mv` to move or rename files
 - `cp` to copy files
 - `rm` to delete files
+- Could also use GUI SFTP clients to perform these tasks (more later)
+
+
+## Exercise 2
+
+Move a file from one directory to another
 
 
 ## Checking file disk usage
@@ -149,22 +177,31 @@ du -s * | sort -nr | head -n 10
 ```
 
 - Remember ZFS compresses files, so for uncompressed file sizes:
-  - Use `ls -lh` to list files and view file sizes in current directory
-  - Alternatively, use `du -sh --apparent-size *`
+  - Use `du -sh --apparent-size`
+  - Alternatively, use `ls -lh`
+
+
+## A note on file permissions
+
+- On Linux, files have read (r), write (w), and execute (x) permissions
+- There are separate permissions for the owner, group, and other users
+- A file with `-rwx------` permissions gives the owner full permissions but all other users no permissions
+- A file with `-rwxrwx---` permissions gives the owner and group full permissions but other users no permissions
+- Read and execute permissions are needed to access directories
+- Only the owner (or sysadmin) can change file permissions
 
 
 ## Sharing files
 
 - Project directories are meant for sharing files
-- Use `chmod`, `chgrp`, or `setfacl` commands to set file permissions
-- For example, to provide read-only access to a subdirectory:
+- Use `chmod` to modify file permissions if needed
+- For example, to provide read-only access for group members to a subdirectory:
 
 ```
 chmod 750 /project/ttrojan_123/dir
 ```
 
-- For fine-grained access control, use `setfacl`
-- To check permissions, use `ls -l` or `getfacl`
+- To check permissions, use `ls -l` to list files and their permissions
 
 
 ## Archiving files
@@ -176,7 +213,7 @@ tar -cvf project.tar <dir>
 ```
 
 - Add the `--remove-files` option to also delete the files
-- To list contents of an archive file, use the `-t` option
+- To list contents of an archive file, use the `-t` option:
 
 ```
 tar -tvf project.tar
@@ -192,8 +229,10 @@ tar -xvf project.tar
 ## Compressing files
 
 - Compression/uncompression tools
-  - `gzip` or `pigz` or `xz`
+  - `gzip` or `pigz`
+  - `xz`
 - For large data, can be useful to compress before transferring files (more later)
+- Some files not worth compressing (already compressed files, media files, small files)
 - To compress with `xz` using multiple cores:
 
 ```
@@ -205,6 +244,11 @@ xz -v -T4 dataset.csv
 ```
 xz -dv -T4 dataset.csv.xz
 ```
+
+
+## Exercise 3
+
+Compress and uncompress a file
 
 
 ## Archiving and compressing files
@@ -227,19 +271,12 @@ tar -xvf project.tar.gz
 
 - [USC Digital Repository](https://repository.usc.edu/)
 - [AWS Glacier](https://aws.amazon.com/glacier/)
-- Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, and Dryad)
+- Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, Dryad, etc.)
 
 
-## Transferring files
+## 3 - Transferring files
 
-- Data transfer nodes
-- Many secure file transfer tools
-- Choice depends on preference and type of transfer
-- Local &rlarr; CARC systems
-  - GUI: Cyberduck, FileZilla, WinSCP, MobaXterm, Globus
-  - CLI: `sftp`, `scp`, `rsync`, `globus-cli`
-- CARC systems &rlarr; Internet
-  - CLI: `sftp`, `lftp`, `rclone`, `wget`, `curl`, `aria2c`, `git`
+[CARC User Guide for Transferring Files](https://carc.usc.edu/user-information/user-guides/data-management/transfer-overview)
 
 
 ## Data transfer nodes
@@ -251,27 +288,39 @@ tar -xvf project.tar.gz
 - Note: Compute nodes do not have internet access
 
 
-## Use cases
+## Overview of tools
 
-| System 1 | System 2 | Example Scenarios | Method |
+- Many secure file transfer tools
+- Choice depends on preference and type of transfer
+- Local &rlarr; CARC systems
+  - GUI: Cyberduck, FileZilla, WinSCP, MobaXterm, Globus
+  - CLI: `sftp`, `scp`, `rsync`, `globus-cli`, `aspera-cli`
+- CARC systems &rlarr; Internet
+  - CLI: `sftp`, `lftp`, `rclone`, `wget`, `curl`, `aria2c`, `git`
+
+
+## Some example scenarios
+
+| System 1 | System 2 | Recommended Method |
 |---|---|---|---|
-| Personal computer | CARC file system for small-medium transfers | When transferring files from a personal computer to your CARC project folder that takes a moderate amount of time  | GUI, CLI |
-| Personal computer | CARC file system for large or secure transfers | When transferring files from a personal computer to your CARC project directory that takes a large amount of time or needs to be encrypted | Globus |
-| Amazon Web Services (AWS) | Any CARC file system | When transferring files from an AWS server to your CARC project directory | CLI |
-| Other HPC center | Any CARC file system | When transferring files from another university or research institution to your CARC project directory | Globus |
+| Personal computer | CARC file system for small-medium transfers | GUI, CLI |
+| Personal computer | CARC file system for large or encrypted transfers | Globus |
+| Amazon Web Services (AWS) | CARC file system | CLI |
+| Other HPC center | CARC file system | Globus |
 
 
 ## General recommendations
 
 - Only transfer data that is necessary
 - Compress large files using `xz` to reduce size of transfer (depending on network speed)
-- Archive files using `tar` when transferring large numbers of files
+- Archive files using `tar` when transferring large numbers of files (and compress)
 - For large transfers to/from your local computer or other endpoint, use Globus
+- File sizes and network speed determine what is considered a large transfer
 
 
 ## Graphical transfer tools
 
-- Drag and drop to transfer between local computer and CARC systems
+- Drag and drop files to transfer between local computer and CARC systems
 - A few options for SFTP GUI clients:
   - Cyberduck
   - FileZilla
@@ -281,21 +330,29 @@ tar -xvf project.tar.gz
 - [CARC User Guide for Transferring Files using a GUI](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-gui)
 
 
+## Cyberduck interface
+
+<img src="cyberduck.png" width="1000" />
+
+
 ## Command-line transfer tools
 
 - Many options depending on type of transfer
 
 | Scenario | Options |
 |---|---|
-| Local &rlarr; CARC systems | `sftp`, `scp`, `rsync`, `globus-cli` |
+| Local &rlarr; CARC systems | `sftp`, `scp`, `rsync`, `globus-cli`, `aspera-cli` |
 | CARC systems &rlarr; Internet | *File servers*: `sftp`, `lftp` <br> *Downloads*: `wget`, `curl`, `aria2c` <br> *Cloud storage*: `rclone` <br> *Code*: `git` |
+
+
+## CLI recommendations
 
 - For small-to-medium transfers to/from your local computer, use `sftp` or `rsync`
 - For large transfers to/from your local computer or other endpoint, use `globus-cli`
-- For backing up and syncing directories, use `rsync`
 - For transfers to/from an FTP server, use `lftp`
 - For faster internet downloads, use `aria2c`
 - For transfers to/from cloud storage, use `rclone`
+- For backing up and syncing directories, use `rsync` or `rclone`
 - [CARC User Guide for Transferring Files using a CLI](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-command-line)
 
 
@@ -330,7 +387,58 @@ Fetching /scratch/ttrojan/myplot3.jpg to myplot3.jpg
 ```
 
 
-## aria2c example
+## rsync example
+
+- Structure of command: `rsync [options] <source> <destination>`
+- To upload a directory:
+
+```
+$ rsync -avh ~/data ttrojan@hpc-transfer1.usc.edu:/project/ttrojan_123
+Duo two-factor login for ttrojan
+
+Enter a passcode or select one of the following options:
+
+ 1. Duo Push to XXX-XXX-5555
+ 2. Phone call to XXX-XXX-5555
+ 3. SMS passcodes to XXX-XXX-5555
+
+Passcode or option (1-3): 1
+sending incremental file list
+data/
+data/data1.csv
+data/data2.csv
+data/data3.csv
+
+sent 7,165,979 bytes  received 153 bytes  196,332.38 bytes/sec
+total size is 7,163,626  speedup is 1.00
+```
+
+
+## Exercise 4
+
+Upload a file from your local computer to one of your CARC directories
+
+
+## wget example
+
+- Use `wget` for simple downloads
+
+```
+$ wget https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
+--2021-06-03 11:34:06--  https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
+Resolving julialang-s3.julialang.org (julialang-s3.julialang.org)... 151.101.198.49, 2a04:4e42:2e::561
+Connecting to julialang-s3.julialang.org (julialang-s3.julialang.org)|151.101.198.49|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 112784227 (108M) [binary/octet-stream]
+Saving to: ‘julia-1.6.1-linux-x86_64.tar.gz’
+
+100%[==================================================>] 112,784,227  378MB/s   in 0.3s
+
+2021-06-03 11:34:06 (378 MB/s) - ‘julia-1.6.1-linux-x86_64.tar.gz’ saved [112784227/112784227]
+```
+
+
+## A note on aria2c
 
 - `aria2c` allows multi-connection and concurrent downloads
 - To download with multiple connections:
@@ -339,14 +447,19 @@ Fetching /scratch/ttrojan/myplot3.jpg to myplot3.jpg
 aria2c -x4 <url>
 ```
 
-- To download multiple files concurrently:
+- To download multiple files concurrently (list of URLs in text file):
 
 ```
 aria2c -j4 -i urls.txt
 ```
 
 
-## rclone
+## Exercise 5
+
+Download a file from the internet to one of your CARC directories
+
+
+## A note on Rclone
 
 - `module load rclone`
 - Similar to `rsync`, but for transferring files to/from cloud storage services
@@ -358,22 +471,43 @@ aria2c -j4 -i urls.txt
 
 - For large, long-running transfers
 - Ability to pause and restart transfers and sync directories
-- Can be used to share data between external collaborators or data providers
+- Can also be used to share data between external collaborators or data providers
 - Web GUI or CLI
 - [CARC User Guide for Globus](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-globus)
 
 
+## Globus interface
+
+<img src="globus.png" width="1000" />
+
+
 ## Backing up files
 
-- Local storage (e.g., external drive)
-  - Use `rsync` or Globus
-- Cloud storage
-  - Use `rclone`
-- Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, and Dryad)
+- For local storage (e.g., external drive), use `rsync` or Globus
+- For cloud storage, use `rclone`
+- Can also use research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, Dryad, etc.)
 - Create aliases or shell scripts to help automate backups
+
+
+## Sharing files externally
+
+- Can use Globus or cloud storage
+- With Globus, submit a support ticket and we will help you set it up
+- With cloud storage, use `rclone` to sync a directory and then share with cloud storage sharing features
 
 
 ## Additional resources
 
 - [CARC User Guides for Data Management](https://carc.usc.edu/user-information/user-guides/data-management)
+- Video learning
+  - [SFTP GUI clients](https://carc.usc.edu/education-and-outreach/video-learning/data-management-guis)
+  - [CLI tools and Globus](https://carc.usc.edu/education-and-outreach/video-learning/data-management-cli-globus)
+
+
+## Getting help
+
 - [Submit a support ticket](https://carc.usc.edu/user-information/ticket-submission)
+- [User Forum](https://hpc-discourse.usc.edu/)
+- Office Hours
+  - Every Tuesday 2:30-5pm (currently via Zoom)
+  - Register [here](https://carc.usc.edu/news-and-events/events)
