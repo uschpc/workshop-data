@@ -8,4 +8,9 @@ Slides: https://uschpc.github.io/workshop-data/
 
 ### Additional resources
 
-[CARC user guides for data management](https://carc.usc.edu/user-information/user-guides/data-management)
+[CARC User Guides for Data Management](https://carc.usc.edu/user-information/user-guides/data-management)
+
+Video learning:
+
+[SFTP GUI clients](https://carc.usc.edu/education-and-outreach/video-learning/data-management-guis)  
+[CLI tools and Globus](https://carc.usc.edu/education-and-outreach/video-learning/data-management-cli-globus)
