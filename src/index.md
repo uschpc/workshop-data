@@ -1,18 +1,18 @@
 ---
 title: Data Management on CARC Systems
 author: Center for Advanced Research Computing <br> University of Southern California
-date: 2021-06-03
+date: 2021-06-08
 ---
 
 
 ## Outline
 
-1 - Storage file systems  
-2 - Managing files  
-3 - Transferring files
+1 --- Storage file systems  
+2 --- Managing files  
+3 --- Transferring files
 
 
-## 1 - Storage file systems
+## 1 --- Storage file systems
 
 [CARC User Guide for Storage File Systems](https://carc.usc.edu/user-information/user-guides/data-management/storage-file-systems)
 
@@ -134,7 +134,7 @@ export TMPDIR=/scratch/<username>/tmp
 Create an alias command for changing to your project directory
 
 
-## 2 - Managing files
+## 2 --- Managing files
 
 [CARC User Guide for Managing Files](https://carc.usc.edu/user-information/user-guides/data-management/managing-files)
 
@@ -274,7 +274,7 @@ tar -xvf project.tar.gz
 - Research data repositories (e.g., OSF, Zenodo, Harvard Dataverse, Dryad, etc.)
 
 
-## 3 - Transferring files
+## 3 --- Transferring files
 
 [CARC User Guide for Transferring Files](https://carc.usc.edu/user-information/user-guides/data-management/transfer-overview)
 
