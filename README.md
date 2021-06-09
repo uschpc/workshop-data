@@ -14,3 +14,5 @@ Video learning:
 
 [SFTP GUI clients](https://carc.usc.edu/education-and-outreach/video-learning/data-management-guis)  
 [CLI tools and Globus](https://carc.usc.edu/education-and-outreach/video-learning/data-management-cli-globus)
+
+[Additional data mangement considerations](https://github.com/uschpc/workshop-data/blob/main/Data%20Management.pdf)
