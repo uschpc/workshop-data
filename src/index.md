@@ -1,7 +1,7 @@
 ---
 title: Data Management on CARC Systems
 author: Center for Advanced Research Computing <br> University of Southern California
-date: 2021-06-08
+date: Last updated on 2021-09-09
 ---
 
 
@@ -31,40 +31,6 @@ date: 2021-06-08
 - Run BeeGFS/ZFS, and files are automatically compressed (on the fly)
 - Do not support sensitive data (HIPAA, FERPA, etc.)
 - Check your directories and usage with `myquota`
-
-
-## myquota
-
-```
-ttrojan@discovery1:~$ myquota
---------------------------
-/home1/ttrojan
-      user/group     ||           size          ||    chunk files    
-     name     |  id  ||    used    |    hard    ||  used   |  hard   
---------------|------||------------|------------||---------|---------
-       ttrojan|555555||  127.23 MiB|  100.00 GiB||     4530|  2000000
-
---------------------------
-/scratch/ttrojan
-      user/group     ||           size          ||    chunk files    
-     name     |  id  ||    used    |    hard    ||  used   |  hard   
---------------|------||------------|------------||---------|---------
-       ttrojan|555555||  446.78 MiB|   10.00 TiB||     5797|unlimited
-
---------------------------
-/scratch2/ttrojan
-      user/group     ||           size          ||    chunk files    
-     name     |  id  ||    used    |    hard    ||  used   |  hard   
---------------|------||------------|------------||---------|---------
-       ttrojan|555555||  200.34 MiB|   10.00 TiB||     4002|unlimited
-
---------------------------
-/project/ttrojan_123
-      user/group     ||           size          ||    chunk files
-     name     |  id  ||    used    |    hard    ||  used   |  hard
---------------|------||------------|------------||---------|---------
-   ttrojan_123| 55555||   16.92 GiB|    5.00 TiB||     1134| 30000000
-```
 
 
 ## Home file system
@@ -127,6 +93,7 @@ export TMPDIR=/scratch/<username>/tmp
 ```
 
 - Add the export line to your `~/.bashrc` to automatically set this variable when logging in
+- Include in job scripts to override Slurm `/tmp/SLURM_<job id>` directory
 
 
 ## Exercise 1
@@ -146,10 +113,11 @@ Create an alias command for changing to your project directory
 - Archiving and compressing files
 
 
-## A note on data management plans
+## Notes on data management plans
 
 - Have a project data management plan
 - Review the literature for best practices in your discipline
+- [Hart et al. 2016 - "Ten Simple Rules for Digital Data Storage"](https://doi.org/10.1371/journal.pcbi.1005097)
 
 
 ## Organizing files
@@ -164,7 +132,9 @@ Create an alias command for changing to your project directory
 
 ## Exercise 2
 
-Move a file from one directory to another
+Create a new directory
+
+Move a file from one directory to the new directory
 
 
 ## Checking file disk usage
@@ -181,12 +151,14 @@ du -s * | sort -nr | head -n 10
   - Alternatively, use `ls -lh`
 
 
-## A note on file permissions
+## Notes on file permissions
 
+- To check permissions, use `ls -l` to list files and their permissions
 - On Linux, files have read (r), write (w), and execute (x) permissions
 - There are separate permissions for the owner, group, and other users
 - A file with `-rwx------` permissions gives the owner full permissions but all other users no permissions
 - A file with `-rwxrwx---` permissions gives the owner and group full permissions but other users no permissions
+- There is a hierarchy of permissions
 - Read and execute permissions are needed to access directories
 - Only the owner (or sysadmin) can change file permissions
 
@@ -201,7 +173,7 @@ du -s * | sort -nr | head -n 10
 chmod 750 /project/ttrojan_123/dir
 ```
 
-- To check permissions, use `ls -l` to list files and their permissions
+
 
 
 ## Archiving files
@@ -294,9 +266,9 @@ tar -xvf project.tar.gz
 - Choice depends on preference and type of transfer
 - Local &rlarr; CARC systems
   - GUI: Cyberduck, FileZilla, WinSCP, MobaXterm, Globus
-  - CLI: `sftp`, `scp`, `rsync`, `globus-cli`, `aspera-cli`
+  - CLI: `sftp`, `scp`, `rsync`, `globus-cli`
 - CARC systems &rlarr; Internet
-  - CLI: `sftp`, `lftp`, `rclone`, `wget`, `curl`, `aria2c`, `git`
+  - CLI: `sftp`, `lftp`, `globus-cli`, `aspera-cli`, `rclone`, `wget`, `curl`, `aria2c`, `git`
 
 
 ## Some example scenarios
@@ -341,8 +313,8 @@ tar -xvf project.tar.gz
 
 | Scenario | Options |
 |---|---|
-| Local &rlarr; CARC systems | `sftp`, `scp`, `rsync`, `globus-cli`, `aspera-cli` |
-| CARC systems &rlarr; Internet | *File servers*: `sftp`, `lftp` <br> *Downloads*: `wget`, `curl`, `aria2c` <br> *Cloud storage*: `rclone` <br> *Code*: `git` |
+| Local &rlarr; CARC systems | `sftp`, `scp`, `rsync`, `globus-cli` |
+| CARC systems &rlarr; Internet | *File servers*: `sftp`, `lftp` <br> *Globus shares*: `globus-cli` <br> *Aspera servers*: `aspera-cli` <br> *Downloads*: `wget`, `curl`, `aria2c` <br> *Cloud storage*: `rclone` <br> *Code*: `git` |
 
 
 ## CLI recommendations
@@ -356,89 +328,36 @@ tar -xvf project.tar.gz
 - [CARC User Guide for Transferring Files using a CLI](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-command-line)
 
 
-## sftp example
-
-```
-$ sftp ttrojan@hpc-transfer1.usc.edu
-Duo two-factor login for ttrojan
-
-Enter a passcode or select one of the following options:
-
- 1. Duo Push to XXX-XXX-5555
- 2. Phone call to XXX-XXX-5555
- 3. SMS passcodes to XXX-XXX-5555
-
-Passcode or option (1-3): 1
-Connected to hpc-transfer1.usc.edu.
-sftp> lpwd
-Local working directory: /home/tommy
-sftp> lcd myimages
-sftp> lls
-myplot1.jpg myplot2.jpg
-sftp> pwd
-Remote working directory: /home1/ttrojan
-sftp> cd /scratch/ttrojan/images
-sftp> put myplot1.jpg myplot.jpg
-Uploading myplot1.jpg to /scratch/ttrojan/myplot.jpg
-myplot1.jpg                                 100%   10KB   2.4MB/s   00:01    
-sftp> get myplot3.jpg myplot3.jpg
-Fetching /scratch/ttrojan/myplot3.jpg to myplot3.jpg
-/scratch/ttrojan/myplot3.jpg                100%   10KB   2.4MB/s   00:01  
-```
-
-
-## rsync example
-
-- Structure of command: `rsync [options] <source> <destination>`
-- To upload a directory:
-
-```
-$ rsync -avh ~/data ttrojan@hpc-transfer1.usc.edu:/project/ttrojan_123
-Duo two-factor login for ttrojan
-
-Enter a passcode or select one of the following options:
-
- 1. Duo Push to XXX-XXX-5555
- 2. Phone call to XXX-XXX-5555
- 3. SMS passcodes to XXX-XXX-5555
-
-Passcode or option (1-3): 1
-sending incremental file list
-data/
-data/data1.csv
-data/data2.csv
-data/data3.csv
-
-sent 7,165,979 bytes  received 153 bytes  196,332.38 bytes/sec
-total size is 7,163,626  speedup is 1.00
-```
-
 
 ## Exercise 4
 
 Upload a file from your local computer to one of your CARC directories
 
 
-## wget example
+## Notes on rsync
 
-- Use `wget` for simple downloads
+- Useful transfer, backup, and sync tool
+- May need to install on local computer
+- Structure of command: `rsync [options] <source> <destination>`
+- To upload a directory:
 
 ```
-$ wget https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
---2021-06-03 11:34:06--  https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
-Resolving julialang-s3.julialang.org (julialang-s3.julialang.org)... 151.101.198.49, 2a04:4e42:2e::561
-Connecting to julialang-s3.julialang.org (julialang-s3.julialang.org)|151.101.198.49|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 112784227 (108M) [binary/octet-stream]
-Saving to: ‘julia-1.6.1-linux-x86_64.tar.gz’
+rsync -avh ~/data ttrojan@hpc-transfer1.usc.edu:/project/ttrojan_123
+```
 
-100%[==================================================>] 112,784,227  378MB/s   in 0.3s
+- To download a directory:
 
-2021-06-03 11:34:06 (378 MB/s) - ‘julia-1.6.1-linux-x86_64.tar.gz’ saved [112784227/112784227]
+```
+rsync -avh ttrojan@hpc-transfer1.usc.edu:/project/ttrojan_123/data ~/project
 ```
 
 
-## A note on aria2c
+## Exercise 5
+
+Download a file from the internet to one of your CARC directories
+
+
+## Notes on aria2c
 
 - `aria2c` allows multi-connection and concurrent downloads
 - To download with multiple connections:
@@ -454,20 +373,15 @@ aria2c -j4 -i urls.txt
 ```
 
 
-## Exercise 5
-
-Download a file from the internet to one of your CARC directories
-
-
-## A note on Rclone
+## Notes on rclone
 
 - `module load rclone`
 - Similar to `rsync`, but for transferring files to/from cloud storage services
 - Requires configuration
-- [CARC User Guide for Rclone](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-rclone)
+- [CARC User Guide for rclone](https://carc.usc.edu/user-information/user-guides/data-management/transferring-files-rclone)
 
 
-## Globus service
+## Globus transfer service
 
 - For large, long-running transfers
 - Ability to pause and restart transfers and sync directories
@@ -492,8 +406,12 @@ Download a file from the internet to one of your CARC directories
 ## Sharing files externally
 
 - Can use Globus or cloud storage
-- With Globus, submit a support ticket and we will help you set it up
-- With cloud storage, use `rclone` to sync a directory and then share with cloud storage sharing features
+- With Globus:
+  - Create a specific directory to share as a Guest Collection
+  - Collaborators need a Globus account to access
+- With cloud storage:
+  - Use `rclone` to sync a directory to the cloud
+  - Then share that directory using cloud storage sharing features
 
 
 ## Additional resources
